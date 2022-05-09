@@ -16,6 +16,7 @@ namespace ReadingDataFromExcel
 
         public bool[][] wl_ja; //public bool[][] waitingList_aj;
         public bool[][] feasibleOR_ak;
+        public bool[][] feasibleOR_jk;
         public bool[][] requiredResources_jr;
         public int[] duration_j;
         public int[] lb_duration_a;
@@ -59,15 +60,6 @@ namespace ReadingDataFromExcel
         {
             
             // px_jk
-            bool[][] px_jk = new bool[settings.index_J][];
-            for (int j = 0; j < settings.index_J; j++)
-            {
-                px_jk[j] = new bool[settings.index_K];
-                for (int k = 0; k < settings.index_K; k++)
-                {
-                    px_jk[j][k] = false;
-                }
-            }
             wl_ja = new bool[settings.index_J][];
             for (int j = 0; j < settings.index_J; j++)
             {
@@ -103,7 +95,16 @@ namespace ReadingDataFromExcel
                 }
             }
 
+            feasibleOR_jk = new bool[settings.index_J][];
+            for (int a = 0; a < settings.index_J; a++)
+            {
+                feasibleOR_jk[a] = new bool[settings.index_K];
 
+                for (int k = 0; k < settings.index_K; k++)
+                {
+                    feasibleOR_jk[a][k] = false;
+                }
+            }
 
             // Determine required resources
             requiredResources_jr = new bool[settings.index_J][];
