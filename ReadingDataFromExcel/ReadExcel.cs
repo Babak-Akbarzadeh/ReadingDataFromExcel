@@ -18,6 +18,7 @@ namespace ReadingDataFromExcel
             initial();
             readSurgeonORAssignment();
             ReadSurgeriesData();
+            writeAllInstanceAndSolution();
             //MSSUZ();
             //SBB();
         }
@@ -35,7 +36,19 @@ namespace ReadingDataFromExcel
 
         public List<OptimalSolution> manualSolution;
 
-
+        public void writeAllInstanceAndSolution() 
+        {
+            string path = Directory.GetCurrentDirectory() + "\\" + "RealLife\\";
+			if (!Directory.Exists(path))
+			{
+                Directory.CreateDirectory(path);
+			}
+			for (int i = 0; i < instances.Count; i++)
+			{
+                instances[i].WriteXML(path , "ins_" + i.ToString("00")); 
+                manualSolution[i].WriteXML(path, "sol_" + i.ToString("00"));
+            }
+        }
         public void initial() 
         {
             instances = new List<Instance>();
@@ -60,7 +73,7 @@ namespace ReadingDataFromExcel
 
             MyApp = new Excel.Application();
             MyApp.Visible = false;
-            MyBook = MyApp.Workbooks.Open(Directory.GetCurrentDirectory() + "\\OR_data.xlsx");
+            MyBook = MyApp.Workbooks.Open(Directory.GetCurrentDirectory() + "\\data.xlsx");
             MySheet = (Excel.Worksheet)MyBook.Sheets[1]; // Explicit cast is not required here
                                                          //var lastRow = MySheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell).Row;
                                                          // int theWeek = setWeekDateInfo() + 1;
@@ -74,6 +87,12 @@ namespace ReadingDataFromExcel
                 Console.WriteLine("this is row " + index.ToString());
                 var MyValues = (System.Array)MySheet.get_Range("A" +
                        index.ToString(), "AB" + index.ToString()).Cells.Value;
+                if (MyValues.GetValue(1, 1) == null)
+                {
+                    Flag = false;
+
+                    continue;
+                }
 
                 int theR = -1;
                 int theS = -1;
@@ -101,13 +120,13 @@ namespace ReadingDataFromExcel
 
             MyApp = new Excel.Application();
             MyApp.Visible = false;
-            MyBook = MyApp.Workbooks.Open(Directory.GetCurrentDirectory() + "\\OR_data.xlsx");
+            MyBook = MyApp.Workbooks.Open(Directory.GetCurrentDirectory() + "\\data.xlsx");
             MySheet = (Excel.Worksheet)MyBook.Sheets[1]; // Explicit cast is not required here
                                                          //var lastRow = MySheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell).Row;
                                                          // int theWeek = setWeekDateInfo() + 1;
 
             Boolean Flag = true;
-            DateTime dayOfSurgery = Convert.ToDateTime("10/5/2021 8:00", new System.Globalization.CultureInfo("en-GB"));
+            DateTime dayOfSurgery = Convert.ToDateTime("10/5/2021 8:00", new System.Globalization.CultureInfo("en-US"));
             initialInstanceData();
             int beginingOfDay = 3;
             for (int index = 3; Flag == true; index++)
@@ -115,8 +134,13 @@ namespace ReadingDataFromExcel
                 Console.WriteLine("this is row " + index.ToString());
                 var MyValues = (System.Array)MySheet.get_Range("A" +
                        index.ToString(), "AB" + index.ToString()).Cells.Value;
+				if (MyValues.GetValue(1, 1) == null)
+				{
+                    Flag = false;
 
-                DateTime tmpDate = Convert.ToDateTime(MyValues.GetValue(1, 26), new System.Globalization.CultureInfo("en-GB"));
+                    continue;
+				}
+                DateTime tmpDate = Convert.ToDateTime(MyValues.GetValue(1, 26), new System.Globalization.CultureInfo("en-US"));
                 if (tmpDate.Day != dayOfSurgery.Day)
                 {
                     resourceAve = new int[10] { rooms.Count, 6, 2, 1, 1, 1, 1, 1, 3, 2 };
@@ -137,6 +161,8 @@ namespace ReadingDataFromExcel
                     int counter = -1;
 					for (int i = beginingOfDay; i < index; i++)
 					{
+                        MyValues = (System.Array)MySheet.get_Range("A" +
+                       i.ToString(), "AB" + i.ToString()).Cells.Value;
                         counter++;
                         tmpDate = Convert.ToDateTime(MyValues.GetValue(1, 26), new System.Globalization.CultureInfo("en-GB"));
 
@@ -213,7 +239,7 @@ namespace ReadingDataFromExcel
 						// room assignment 
 						for (int s = 0; s < surgeonRoomAssignemnt.Count; s++)
 						{
-							if (surgeonRoomAssignemnt[s][0] == theS)
+							if (surgeonRoomAssignemnt[s][0] == Convert.ToInt32(MyValues.GetValue(1, 1).ToString()))
 							{
 								for (int r = 1; r < surgeonRoomAssignemnt[s].Count; r++)
 								{
@@ -262,22 +288,24 @@ namespace ReadingDataFromExcel
 
 
 
-
+                        int theRoom = -1;
+                        if (MyValues.GetValue(1, 10) != null)
+                        {
+                            theRoom = Convert.ToInt32(MyValues.GetValue(1, 10).ToString());
+                        }
 
 
 
 
                         // manual solution 
-                        tmpSolution.startT_j[theP] = startTime;
-                        tmpSolution.closingT_j[theP] = completionTime;
-
+                        tmpSolution.px_jkt[theP][returnIndex(theRoom, rooms)][startTime] = true;
                     }
 
                     instances.Add(tmpInstance);
                     manualSolution.Add(tmpSolution);
 
                     initialInstanceData();
-                    dayOfSurgery.AddDays(1);
+                    dayOfSurgery = dayOfSurgery.AddDays(1);
                     beginingOfDay = index;
                     index--;
                     continue;
@@ -344,16 +372,33 @@ namespace ReadingDataFromExcel
                     }
                     if (theRsc3 >= 0 && addResource(theRsc3))
                     {
-                        resources.Add(theRsc1);
+                        resources.Add(theRsc3);
                     }
 
                     if (tmpDate.Hour < 8)
 					{
 						Console.WriteLine();
 					}
-					if (totalTimeslots < (tmpDate.Hour - 8) * 60 + tmpDate.Minute)
+                    int startTime = (tmpDate.Hour - 8) * 60 + tmpDate.Minute;
+                    int duration = 0;
+                    int preDuration = 0;
+                    int postDuration = 0;
+                    if (MyValues.GetValue(1, 5) != null)
+                    {
+                        duration = Convert.ToInt32(MyValues.GetValue(1, 5).ToString());
+                    }
+                    if (MyValues.GetValue(1, 6) != null)
+                    {
+                        preDuration = Convert.ToInt32(MyValues.GetValue(1, 6).ToString());
+                    }
+                    if (MyValues.GetValue(1, 7) != null)
+                    {
+                        postDuration = Convert.ToInt32(MyValues.GetValue(1, 7).ToString());
+                    }
+                    int completionTime = startTime + duration + preDuration + postDuration;
+                    if (totalTimeslots < completionTime )
 					{
-                        totalTimeslots = (tmpDate.Hour - 8) * 60 + tmpDate.Minute;
+                        totalTimeslots = completionTime;
                     }
                     
 
@@ -459,6 +504,7 @@ namespace ReadingDataFromExcel
 			if (addSurgeon)
 			{
                 surgeonRoomAssignemnt.Add(new List<int>());
+                surgeonRoomAssignemnt[surgeonRoomAssignemnt.Count - 1].Add(theS);
                 surgeonRoomAssignemnt[surgeonRoomAssignemnt.Count - 1].Add(theR);
 			}
         }
