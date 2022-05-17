@@ -29,6 +29,7 @@ namespace ReadingDataFromExcel
         List<List<int>> surgeonRoomAssignemnt;
         int totalTimeslots;
         int lengthOfTimeslot;
+        int lengthOfBlock;
 
         int[] resourceAve;
 
@@ -45,8 +46,8 @@ namespace ReadingDataFromExcel
 			}
 			for (int i = 0; i < instances.Count; i++)
 			{
-                instances[i].WriteXML(path , "ins_" + i.ToString("00")); 
-                manualSolution[i].WriteXML(path, "sol_" + i.ToString("00"));
+                instances[i].WriteXML(); 
+                manualSolution[i].WriteXML();
             }
         }
         public void initial() 
@@ -143,19 +144,27 @@ namespace ReadingDataFromExcel
                 DateTime tmpDate = Convert.ToDateTime(MyValues.GetValue(1, 26), new System.Globalization.CultureInfo("en-US"));
                 if (tmpDate.Day != dayOfSurgery.Day)
                 {
+					
                     resourceAve = new int[10] { rooms.Count, 6, 2, 1, 1, 1, 1, 1, 3, 2 };
                     // create settings 
                     InstanceSettings settings = new InstanceSettings();
+					
                     settings.index_A = surgeons.Count;
                     settings.index_J = patients.Count;
                     settings.index_K = rooms.Count;
                     settings.index_R = resources.Count;
-                    settings.index_T = lengthOfTimeslot;
+                    settings.lengthOfTimeSlot = lengthOfTimeslot;
                     settings.totalRegTimePerRoom = totalTimeslots;
+                    settings.lengthOfBlock = lengthOfBlock;
                     // create instances
-
+                    if (settings.index_J == 0)
+                    {
+                        dayOfSurgery = dayOfSurgery.AddDays(1);
+                        index--;
+                        continue;
+                    }
                     string name = tmpDate.Year.ToString() + "-" + tmpDate.Month.ToString() + "-" + tmpDate.Day.ToString();
-                    Instance tmpInstance = new Instance(settings, name);
+                    Instance tmpInstance = new Instance(settings, "RealLife", tmpDate.Month.ToString(), name);
                     OptimalSolution tmpSolution = new OptimalSolution(tmpInstance);
 					tmpInstance.initialInputs(settings);
                     int counter = -1;
@@ -400,10 +409,11 @@ namespace ReadingDataFromExcel
 					{
                         totalTimeslots = completionTime;
                     }
-                    
+                    totalTimeslots = (int)Math.Ceiling((double)totalTimeslots / 60) * 60;
 
-                    lengthOfTimeslot = 5;
-                    
+                    lengthOfTimeslot = 20;
+                    lengthOfBlock = 60;
+
                 }
 
             }

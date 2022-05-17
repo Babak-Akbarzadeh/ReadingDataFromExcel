@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System;   
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,10 +7,9 @@ using System.IO;
 
 namespace ReadingDataFromExcel
 {
-	public class Instance
-
+    public class Instance
     {
-        string description;
+        public string description;
         Random random;
         public InstanceSettings settings;
 
@@ -25,7 +24,7 @@ namespace ReadingDataFromExcel
         public int[] lb_post_operatingT_a;
         public int[] ub_pre_operatingT_a;
         public int[] ub_post_operatingT_a;
-        public int[] pre_operatingT_j;
+        public int[] pre_operatingT_j; 
         public int[] post_operatingT_j;
         public int[] transferT_j;
         public int[] priority_j;
@@ -33,32 +32,22 @@ namespace ReadingDataFromExcel
         public int[] amountAvailable_r;
         public int M;
         public string name;
+        public Pathes pathes;
 
+        public AlgorithmicSettings algorithmicSettings;
         public Instance() { }
-        public Instance(InstanceSettings settings, string name)
-
+        public Instance(InstanceSettings settings, string expriment, string groupName, string name) 
+        
         {
             this.settings = settings;
-            initial(name);
-        }
-
-        public void initial(string name)
-        {
-            random = new Random(0);
             this.name = name;
-
-            duration_j = new int[settings.index_J];
-            for (int j = 0; j < settings.index_J; j++)
-            {
-                duration_j[j] = 0;
-            }
-            //createSets();
-            createSequence(name);
+            pathes = new Pathes(expriment, "", groupName);
+            algorithmicSettings = new AlgorithmicSettings(settings);
+            initial();
         }
-
         public void initialInputs(InstanceSettings settings)
         {
-            
+
             // px_jk
             wl_ja = new bool[settings.index_J][];
             for (int j = 0; j < settings.index_J; j++)
@@ -70,7 +59,7 @@ namespace ReadingDataFromExcel
                 }
             }
 
-            
+
             duration_j = new int[settings.index_J];
             pre_operatingT_j = new int[settings.index_J];
             post_operatingT_j = new int[settings.index_J];
@@ -81,7 +70,7 @@ namespace ReadingDataFromExcel
                 post_operatingT_j[j] = 0;
             }
 
-            
+
 
             // Determine feasible ORs
             feasibleOR_ak = new bool[settings.index_A][];
@@ -111,7 +100,7 @@ namespace ReadingDataFromExcel
             for (int j = 0; j < settings.index_J; j++)
             {
                 requiredResources_jr[j] = new bool[settings.index_R];
-               
+
                 for (int r = 0; r < settings.index_R; r++)
                 {
                     requiredResources_jr[j][r] = false;
@@ -150,219 +139,24 @@ namespace ReadingDataFromExcel
             M = 1000;
 
         }
-
-        /*
-        public void createSets() 
+        public void initial()
         {
-            waitingList_aj = new bool[settings.index_A] [];
-            for (int a = 0; a < settings.index_A; a++)
-            {
-                waitingList_aj[a] = new bool[settings.index_J];
-                for (int j = 0; j < settings.index_J; j++)
-                {
-                    waitingList_aj[a][j] = false;
-                }
-            }
-
-            for (int j = 0; j < settings.index_J; j++) 
-            {
-                int indexS = random.Next(0, settings.index_A);
-                waitingList_aj[indexS][j] = true;
-            } //assign a surgery to a surgeon at random
-
-            lb_duration_a = new int[settings.index_A];
-            for (int a = 0; a < settings.index_A; a++)
-            {
-                lb_duration_a[a] = random.Next(settings.lb_duration_ave, settings.ub_duration_ave/2);
-                int amount = random.Next(0, settings.lb_duration_ave);
-                if (random.NextDouble() < 0.5)
-                {
-                    lb_duration_a[a] -= amount;
-                }
-            }
-
-            ub_duration_a = new int[settings.index_A];
-            for (int a = 0; a < settings.index_A; a++)
-            {
-                ub_duration_a[a] = random.Next(settings.ub_duration_ave / 2, settings.ub_duration_ave);
-                int amont = random.Next(settings.lb_duration_ave, settings.ub_duration_ave);
-                if (random.NextDouble() < 0.5)
-                {
-                    ub_duration_a[a] += amont;
-                }
-            }
+            random = new Random();
 
             duration_j = new int[settings.index_J];
             for (int j = 0; j < settings.index_J; j++)
             {
                 duration_j[j] = 0;
-                for (int a = 0; a < settings.index_A; a++)
-                {
-                    if (waitingList_aj[a][j])
-                    {
-                        duration_j[j] = random.Next(lb_duration_a[a], ub_duration_a[a]);
-                    }
-                }
             }
+            //createSets();
+            createSequence() ;
+            setDescription() ;
+        }
+        
 
-            pre_operatingT_j = new int[settings.index_J];
-            for (int j = 0; j < settings.index_J; j++)
-            {
-                pre_operatingT_j[j] = 0;
-                for (int a = 0; a < settings.index_A; a++)
-                {
-                    if (waitingList_aj[a][j])
-                    {
-                        pre_operatingT_j[j] = random.Next(settings.lb_pre_operatingT_ave, settings.ub_pre_operatingT_ave);
-                    }
-                }
-            }
-
-            post_operatingT_j = new int[settings.index_J];
-            for (int j = 0; j < settings.index_J; j++)
-            {
-                post_operatingT_j[j] = 0;
-                for (int a = 0; a < settings.index_A; a++)
-                {
-                    if (waitingList_aj[a][j])
-                    {
-                        post_operatingT_j[j] = random.Next(settings.lb_post_operatingT_ave, settings.ub_post_operatingT_ave);
-                    }
-                }
-            }
-
-            feasibleOR_ak = new bool[settings.index_A][];  //!!
-            for (int a = 0; a < settings.index_A; a++)
-            {
-                feasibleOR_ak[a] = new bool[settings.index_K];
-                double totalReq = 0;
-                double totalAve = (settings.totalRegTimePerRoom) * settings.index_K;
-                for (int i = 0; i < settings.index_J; i++)
-                {
-                    if (waitingList_aj[a][i])
-                    {
-                        totalReq += duration_j[i]+pre_operatingT_j[i]+post_operatingT_j[i];
-                    }
-                }
-
-                for (int k = 0; k < settings.index_K; k++)
-                {
-                    feasibleOR_ak[a][k] = false;
-                }
-
-                if (a < settings.index_K)
-                {
-                    feasibleOR_ak[a][a] = true;
-                }
-                else
-                {//!!
-                    int kk = 0;
-                    double totalReqMin = 999;
-                    for(int k=0; k < settings.index_K; k++)
-                    {
-                        double totalReq2 = 0;
-                        for (int aa=0; aa < a+1; aa++)
-                        {
-                            if (feasibleOR_ak[aa][k])
-                            {
-                                
-                                for (int i = 0; i < settings.index_J; i++)
-                                {                                   
-                                    if (waitingList_aj[aa][i])
-                                    {
-                                        totalReq2 += duration_j[i] + pre_operatingT_j[i] + post_operatingT_j[i];
-                                    }
-                                }
-                            }
-                        }
-                        if (totalReq2 < totalReqMin)
-                        {
-                            kk = k;
-                            totalReqMin = totalReq2;
-                        }
-                    }//!!
-                    //int kk = random.Next(0, settings.index_K - 1);
-                    feasibleOR_ak[a][kk] = true;
-                }
-
-                for (int k=0; k < settings.index_K; k++)
-                {
-                    if (random.NextDouble() < (double)totalReq/totalAve )  
-                    {
-                        feasibleOR_ak[a][k] = true;
-                    }                 
-                }   
-            }  
-
-
-            requiredResources_jr = new bool[settings.index_J][];  
-            for (int j=0; j < settings.index_J; j++)
-            {
-                requiredResources_jr[j] = new bool[settings.index_R];
-                bool[] reqRes = new bool[settings.index_R];
-                for (int rr = 0; rr < settings.index_R; rr++)
-                {
-                    if (rr == 0)
-                    {
-                        reqRes[rr] = true;
-                    }
-                    else
-                    {
-                        if (random.NextDouble() < settings.reqResourceRatio)              //!! Some resources are only required by 1 surgeon
-                        {
-                            reqRes[rr] = true;
-                        }
-                        else
-                        {
-                            reqRes[rr] = false;
-                        }
-                    }
-                }
-                for (int r=0; r<settings.index_R; r++)
-                {
-                    requiredResources_jr[j][r] = reqRes[r];
-                    
-                }
-            }
-          
-            transferT_j = new int[settings.index_J];
-            for (int j = 0; j< settings.index_J; j++)
-            {
-                transferT_j[j] = random.Next(settings.lb_Transfer, settings.ub_Transfer) ;
-            }
-
-            priority_j = new int[settings.index_J];      //!! Sometimes 7.5; 7.6
-            for (int j=0; j<settings.index_J; j++)
-            {
-                priority_j[j] = random.Next(settings.lb_Priority, settings.ub_Priority);
-            }
-
-            setupResource_r = new int[settings.index_R];
-            for(int r=0; r<settings.index_R; r++)
-            {
-                setupResource_r[r] = random.Next(settings.lb_ResourceSetupTime, settings.ub_ResourceSetupTime); 
-            }
-
-            amountAvailable_r = new int[settings.index_R];
-            amountAvailable_r[0] = settings.index_K;
-            //4,6, 2, 1, 1, 1, 1, 1, 3, 2
-            amountAvailable_r[1] = 6;
-            amountAvailable_r[2] = 2;
-            amountAvailable_r[3] = 1;
-            amountAvailable_r[4] = 1;
-            amountAvailable_r[5] = 1;
-            amountAvailable_r[6] = 1;
-            amountAvailable_r[7] = 1;
-            amountAvailable_r[8] = 3;
-            amountAvailable_r[9] = 2;
-
-            
-        }*/
-
-        public void createSequence(string name)
+        public void createSequence()
         {
-            StreamWriter writer = new StreamWriter(name + "inst.txt");
-            description = "";
+            description = "\n\n";
             // px_jk
             bool[][] px_jk = new bool[settings.index_J][];
             for (int j = 0; j < settings.index_J; j++)
@@ -441,7 +235,7 @@ namespace ReadingDataFromExcel
             }
             int[] startTime_j = new int[settings.index_J];
             int[] endTime_j = new int[settings.index_J];
-            duration_j = new int[settings.index_J];
+            duration_j = new int[settings.index_J];  
             pre_operatingT_j = new int[settings.index_J];
             post_operatingT_j = new int[settings.index_J];
             for (int j = 0; j < settings.index_J; j++)
@@ -462,7 +256,7 @@ namespace ReadingDataFromExcel
             for (int r = 0; r < settings.index_K; r++)
             {
                 // howmany patient = 50
-                int totalTimeslots = settings.totalRegTimePerRoom / settings.index_T;
+                int totalTimeslots = settings.totalRegTimePerRoom / settings.lengthOfTimeSlot;  
                 bool[] timeLine = new bool[totalTimeslots];
                 for (int t = 0; t < totalTimeslots; t++)
                 {
@@ -524,8 +318,8 @@ namespace ReadingDataFromExcel
                     if (px_jk[j][r])
                     {
                         compeleteTime = curPointer - prvPointer;
-                        startTime_j[j] = timeRoom_k[r] * settings.index_T;
-                        endTime_j[j] = (timeRoom_k[r] + compeleteTime) * settings.index_T;
+                        startTime_j[j] = timeRoom_k[r] * settings.lengthOfTimeSlot;
+                        endTime_j[j] = (timeRoom_k[r] + compeleteTime) * settings.lengthOfTimeSlot;
                         timeRoom_k[r] += compeleteTime;
                         pointCounter++;
                         prvPointer = curPointer;
@@ -534,28 +328,28 @@ namespace ReadingDataFromExcel
                             curPointer = points[pointCounter];
                         }
 
-                        if (compeleteTime < 5)
+                        if (compeleteTime <= 1)
                         {
-                            duration_j[j] = compeleteTime * settings.index_T;
+                            duration_j[j] = compeleteTime * settings.lengthOfTimeSlot;
                             pre_operatingT_j[j] = 0;
                             post_operatingT_j[j] = 0;
                         }
                         else
                         {
                             int dur = random.Next((int)Math.Round(compeleteTime * settings.ratioDurationToTotal), compeleteTime);
-                            dur -= dur % settings.index_T;
-                            duration_j[j] = dur * settings.index_T;
-                            int post = (int)Math.Ceiling((compeleteTime - dur) * random.NextDouble());
-                            post -= post % settings.index_T;
+                            
+                            duration_j[j] = dur * settings.lengthOfTimeSlot;
+							
+                            int post = (int)Math.Round((double)(compeleteTime - dur) * random.NextDouble());
                             if (post + dur > compeleteTime)
                             {
-                                post_operatingT_j[j] = (compeleteTime - dur) * settings.index_T;
+                                post_operatingT_j[j] = (compeleteTime - dur) * settings.lengthOfTimeSlot;
                                 pre_operatingT_j[j] = 0;
                             }
                             else
                             {
-                                post_operatingT_j[j] = post;
-                                pre_operatingT_j[j] = (compeleteTime - dur - post) * settings.index_T;
+                                post_operatingT_j[j] = post * settings.lengthOfTimeSlot;
+                                pre_operatingT_j[j] = (compeleteTime - dur - post) * settings.lengthOfTimeSlot;
                             }
 
                         }
@@ -570,103 +364,15 @@ namespace ReadingDataFromExcel
                 description += "Surgery ";
                 description += j.ToString("00");
                 description += ": ";
-                description += pre_operatingT_j[j].ToString("000");
+                description += pre_operatingT_j[j].ToString("000") ;
                 description += ", ";
                 description += duration_j[j].ToString("000");
                 description += ", ";
-
+                
                 description += post_operatingT_j[j].ToString("000");
                 description += "\n";
             }
 
-
-            /*
-           //wl_ja
-           bool[][] wl_ja = new bool[settings.index_J][];
-           for (int j = 0; j < settings.index_J; j++)
-           {
-               px_jk[j] = new bool[settings.index_A];
-               for (int a = 0; a < settings.index_A; a++)
-               {
-                   wl_ja[j][a] = false;
-               }
-           }
-           // # total patient 
-           int[] totalDuration_a = new int[settings.index_A];
-           for (int a = 0; a < settings.index_A; a++)
-           {
-               totalDuration_a[a] = 0;
-           }
-           for (int j = 0; j < settings.index_J; j++)
-           {
-               int max = 0;
-               int min = int.MaxValue;
-               for (int a = 0; a < settings.index_A; a++)
-               {
-                   if (totalDuration_a[a] < min)
-                   {
-                       min = totalDuration_a[a];
-                   }
-                   if (totalDuration_a[a] > max)
-                   {
-                       max = totalDuration_a[a];
-                   }
-               }
-               // random patient ass
-               int theSurgeon = -1;
-               int tmpDuration = duration_j[j] + pre_operatingT_j[j] + post_operatingT_j[j];
-               while (theSurgeon <= 0)
-               {
-                   theSurgeon = random.Next(0, settings.index_A);                   
-                   if (totalDuration_a[theSurgeon] + tmpDuration > settings.totalRegTimePerRoom - 1)
-                   {
-                       theSurgeon = -1;
-                       bool noSurgeon = true;
-                       for (int s = 0; s < settings.index_A; s++)
-                       {
-                           if (totalDuration_a[s] + tmpDuration < settings.totalRegTimePerRoom - 1)
-                           {
-                               noSurgeon = false;
-                               break;
-                           }
-                       }
-
-                       if (noSurgeon)
-                       {
-                           if (pre_operatingT_j[j] > 0)
-                           {
-                               tmpDuration = duration_j[j]  + post_operatingT_j[j];
-                               pre_operatingT_j[j] = 0;
-                           }
-                           else if (post_operatingT_j[j]>0)
-                           {
-                               tmpDuration = duration_j[j];
-                               post_operatingT_j[j] = 0;
-                           }
-                           else
-                           {
-                               duration_j[j]--;
-                               tmpDuration = duration_j[j];
-                           }
-                       }
-
-                   }
-                   else if (totalDuration_a[theSurgeon] < max)
-                   {
-                       wl_ja[j][theSurgeon] = true;
-                       totalDuration_a[theSurgeon] +=  tmpDuration;
-                   }
-                   else if (totalDuration_a[theSurgeon] == min) //!!
-                   {
-                       wl_ja[j][theSurgeon] = true;
-                       totalDuration_a[theSurgeon]+=tmpDuration;
-                   }
-                   else
-                   {
-                       theSurgeon = -1;
-                   }
-               }
-           }*/
 
             // Determine feasible ORs
             feasibleOR_ak = new bool[settings.index_A][];
@@ -718,13 +424,13 @@ namespace ReadingDataFromExcel
                                 totalSur++;
                             }
                         }
-
+                        
                     }
 
                     double chance = 1;
                     if (totalSur != 0)
                     {
-                        chance = (double)(totalSur - sur) / totalSur;
+                        chance = (double)(totalSur - sur)/ totalSur;
                     }
 
 
@@ -738,12 +444,12 @@ namespace ReadingDataFromExcel
 
             }
 
-            for (int a = 0; a < settings.index_A; a++)
+            for(int a = 0; a < settings.index_A; a++)
             {
                 description += "Surgeon ";
                 description += a;
                 description += ": ";
-                for (int k = 0; k < settings.index_K; k++)
+                for (int k=0; k < settings.index_K; k++)
                 {
                     if (feasibleOR_ak[a][k])
                     {
@@ -764,10 +470,33 @@ namespace ReadingDataFromExcel
                 totalDuration_a[a] = 0;
             }
 
-            for (int j = 0; j < settings.index_J; j++)
+            int[] sortedPat_j = new int[settings.index_J];
+			for (int j = 0; j < settings.index_J; j++)
+			{
+                sortedPat_j[j] = j;
+			}
+			for (int i = 0; i < settings.index_J; i++)
+			{
+				for (int j = i + 1; j < settings.index_J; j++)
+				{
+                    int tmpi = duration_j[sortedPat_j[i]] + pre_operatingT_j[sortedPat_j[i]] + post_operatingT_j[sortedPat_j[i]];
+                    int tmpj = duration_j[sortedPat_j[j]] + pre_operatingT_j[sortedPat_j[j]] + post_operatingT_j[sortedPat_j[j]];
+					if (tmpi > tmpj)
+					{
+                        int tmp = sortedPat_j[i];
+                        sortedPat_j[i] = sortedPat_j[j];
+                        sortedPat_j[j] = tmp;
+
+                    }
+                }
+			}
+
+
+            for (int jj = 0; jj < settings.index_J; jj++)
             {
+                int j = sortedPat_j[jj];
                 int assignedRoom = -1;
-                for (int k = 0; k < settings.index_K; k++)
+                for( int k=0; k < settings.index_K; k++)
                 {
                     if (px_jk[j][k])
                     {
@@ -784,13 +513,13 @@ namespace ReadingDataFromExcel
                     if (feasibleOR_ak[randomSurgeon][assignedRoom])
                     {
 
-                        if (totalDuration_a[randomSurgeon] + tmpDuration > settings.totalRegTimePerRoom - 1)
+                        if (totalDuration_a[randomSurgeon] + tmpDuration > settings.totalRegTimePerRoom )
                         {
                             surgeon = -1;
                             bool noSurgeon = true;
                             for (int a = 0; a < settings.index_A && feasibleOR_ak[a][assignedRoom]; a++)
                             {
-                                if (totalDuration_a[a] + tmpDuration < settings.totalRegTimePerRoom - 1)
+                                if (totalDuration_a[a] + tmpDuration < settings.totalRegTimePerRoom )
                                 {
                                     noSurgeon = false;
                                     break;
@@ -811,7 +540,7 @@ namespace ReadingDataFromExcel
                                 }
                                 else
                                 {
-                                    duration_j[j]--;
+                                    duration_j[j] -= settings.lengthOfTimeSlot;
                                     tmpDuration = duration_j[j];
                                 }
                             }
@@ -820,18 +549,18 @@ namespace ReadingDataFromExcel
                         {
                             surgeon = randomSurgeon;
                             totalDuration_a[randomSurgeon] += tmpDuration;
-                        }
+                        }                       
                     }
                 }
                 wl_ja[j][surgeon] = true;
             }
 
-            for (int a = 0; a < settings.index_A; a++)
+            for (int a=0; a < settings.index_A; a++)
             {
                 description += "Surgeon ";
                 description += a;
                 description += ": ";
-                for (int j = 0; j < settings.index_J; j++)
+                for(int j=0; j < settings.index_J; j++)
                 {
                     if (wl_ja[j][a])
                     {
@@ -856,7 +585,7 @@ namespace ReadingDataFromExcel
                     }
                     else
                     {
-                        if (random.NextDouble() < settings.reqResourceRatio)
+                        if (random.NextDouble() < settings.reqResourceRatio)              
                         {
                             reqRes[rr] = true;
                         }
@@ -886,13 +615,13 @@ namespace ReadingDataFromExcel
 
 
             // create amountAvailable_r based on max number used
-            for (int t = 0; t < settings.totalRegTimePerRoom; t++)
+            for (int t=0; t<settings.totalRegTimePerRoom; t++)
             {
-                for (int j = 0; j < settings.index_J; j++)
+                for( int j=0; j<settings.index_J; j++)
                 {
                     if (startTime_j[j] <= t && endTime_j[j] >= t)
                     {
-                        for (int r = 0; r < settings.index_R; r++)
+                        for (int r=0; r < settings.index_R; r++)
                         {
                             if (requiredResources_jr[j][r])
                             {
@@ -904,14 +633,14 @@ namespace ReadingDataFromExcel
             }
 
             int[] maxAmountNeeded_r = new int[settings.index_R];
-            for (int r = 0; r < settings.index_R; r++)
+            for( int r=0; r < settings.index_R; r++)
             {
                 maxAmountNeeded_r[r] = 0;
             }
 
-            for (int r = 0; r < settings.index_R; r++)
+            for(int r = 0; r < settings.index_R; r++)
             {
-                for (int t = 0; t < settings.totalRegTimePerRoom; t++)
+                for( int t=0; t < settings.totalRegTimePerRoom; t++)
                 {
                     if (amountNeeded_rt[r][t] > maxAmountNeeded_r[r])
                     {
@@ -920,7 +649,7 @@ namespace ReadingDataFromExcel
                 }
             }
 
-            amountAvailable_r = new int[settings.index_R];
+             amountAvailable_r = new int[settings.index_R];
             for (int r = 0; r < settings.index_R; r++)
             {
                 amountAvailable_r[r] = 0;
@@ -928,7 +657,7 @@ namespace ReadingDataFromExcel
 
 
             // create amountAvailable_r based on max number used
-            for (int r = 0; r < settings.index_R; r++)
+            for (int r=0; r < settings.index_R; r++)
             {
                 amountAvailable_r[r] = maxAmountNeeded_r[r];
             }
@@ -941,7 +670,7 @@ namespace ReadingDataFromExcel
                 transferT_j[j] = random.Next(settings.lb_Transfer, settings.ub_Transfer);
             }
 
-            priority_j = new int[settings.index_J];
+            priority_j = new int[settings.index_J];      
             for (int j = 0; j < settings.index_J; j++)
             {
                 priority_j[j] = random.Next(settings.lb_Priority, settings.ub_Priority);
@@ -953,36 +682,89 @@ namespace ReadingDataFromExcel
                 setupResource_r[r] = random.Next(settings.lb_ResourceSetupTime, settings.ub_ResourceSetupTime);
             }
 
-            M = 1000;
+            ArrayInitializer.CreateArray(ref feasibleOR_jk, settings.index_J, settings.index_K, true);
+
+			for (int j = 0; j < settings.index_J; j++)
+			{
+				for (int k = 0; k < settings.index_K; k++)
+				{
+					if (random.NextDouble() < 0.1)
+					{
+                        feasibleOR_jk[j][k] = false;
+					}
+				}
+			}
+
+            M = settings.index_J * settings.totalRegTimePerRoom;
 
 
-            writer.WriteLine(description);
-            writer.Close();
         }
 
-
-        public void WriteXML(string Path, string name)
+        public void setDescription() 
         {
+            string tmp = "Waiting list ";
+			for (int a = 0; a < settings.index_A; a++)
+			{
 
-            Path = Path + name + "Instance.xml";
-            System.Xml.Serialization.XmlSerializer writer =
+                tmp += "Surgeon " + a.ToString("00") + ":";
+				for (int j = 0; j < settings.index_J; j++)
+				{
+					if (wl_ja[j][a])
+					{
+                        tmp += " " + j.ToString("00");
+					}
+				}
+                tmp += "\n";
+			}
+
+
+            tmp += "\n \nSurgical cases:\n";
+            for (int j = 0; j < settings.index_J; j++)
+            {
+                tmp += j.ToString("00") +": " + pre_operatingT_j[j].ToString("000") + " - " + duration_j[j].ToString("000") + " - " + post_operatingT_j[j].ToString("000");
+            }
+
+            description = tmp + description;
+        }
+        public void WriteXML()
+        {
+            setDescription();
+            string path = pathes.InsGroupLocation + name + "Instance.xml";
+			if (File.Exists(path))
+			{
+				Console.WriteLine("The instance is already there, nothing has been rewritten");
+			}
+			else
+			{
+                System.Xml.Serialization.XmlSerializer writer =
                 new System.Xml.Serialization.XmlSerializer(typeof(Instance));
-            System.IO.FileStream file = System.IO.File.Create(Path);
-            writer.Serialize(file, this);
-            file.Close();
+                System.IO.FileStream file = System.IO.File.Create(path);
+                writer.Serialize(file, this);
+                file.Close();
+            }
+            
         }
 
         public Instance ReadXML(string Path, string name)
         {
             Path = Path + name + "Instance.xml";
-            // Now we can read the serialized book ...  
-            System.Xml.Serialization.XmlSerializer reader =
-                new System.Xml.Serialization.XmlSerializer(typeof(Instance));
+            if (!File.Exists(Path))
+            {
+                Console.WriteLine("The instance is not there this is an empty instances ");
+                return new Instance();
+			}
+			else
+			{
+                // Now we can read the serialized book ...  
+                System.Xml.Serialization.XmlSerializer reader =
+                    new System.Xml.Serialization.XmlSerializer(typeof(Instance));
 
-            System.IO.StreamReader file = new System.IO.StreamReader(Path);
-            Instance tmp = (Instance)reader.Deserialize(file);
-            file.Close();
-            return tmp;
+                System.IO.StreamReader file = new System.IO.StreamReader(Path);
+                Instance tmp = (Instance)reader.Deserialize(file);
+                file.Close();
+                return tmp;
+            }
+            
         }
 
     }
