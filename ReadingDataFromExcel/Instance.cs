@@ -403,7 +403,7 @@ namespace ReadingDataFromExcel
                         total++;
                     }
                 }
-                for (int k = 0; k < settings.index_K && total < settings.TotalExtraRoomAssignment; k++)
+                for (int k = 0; k < settings.index_K && total < settings.totalExtraRoomAssignment; k++)
                 {
                     int sur = 0;
                     for (int aa = 0; aa < settings.index_A; aa++)
@@ -700,31 +700,53 @@ namespace ReadingDataFromExcel
 
         }
 
-        public void setDescription() 
+        public void setDescription()
         {
-            string tmp = "Waiting list ";
-			for (int a = 0; a < settings.index_A; a++)
-			{
+            string tmp = "\nWaiting list \n";
+            for (int a = 0; a < settings.index_A; a++)
+            {
 
                 tmp += "Surgeon " + a.ToString("00") + ":";
-				for (int j = 0; j < settings.index_J; j++)
-				{
-					if (wl_ja[j][a])
-					{
+                for (int j = 0; j < settings.index_J; j++)
+                {
+                    if (wl_ja[j][a])
+                    {
                         tmp += " " + j.ToString("00");
-					}
-				}
+                    }
+                }
                 tmp += "\n";
-			}
+            }
 
 
             tmp += "\n \nSurgical cases:\n";
             for (int j = 0; j < settings.index_J; j++)
             {
-                tmp += j.ToString("00") +": " + pre_operatingT_j[j].ToString("000") + " - " + duration_j[j].ToString("000") + " - " + post_operatingT_j[j].ToString("000");
+                tmp += j.ToString("00") + "( pr: " + priority_j[j].ToString("00") + " )" + ": " + pre_operatingT_j[j].ToString("000") + " - " + duration_j[j].ToString("000") + " - " + post_operatingT_j[j].ToString("000") + "\n";
             }
 
-            description = tmp + description;
+
+            tmp += "\nRoom Assignemnt:\n";
+            for (int k = 0; k < settings.index_K; k++)
+            {
+                tmp += "Room " + k + ":";
+                string list = "";
+                for (int a = 0; a < settings.index_A; a++)
+                {
+                    if (feasibleOR_ak[a][k])
+                    {
+                        if (list == "")
+                        {
+                            list += " " + a.ToString("00");
+                        }
+                        else
+                        {
+                            list += ", " + a.ToString("00");
+                        }
+                    }
+                }
+                tmp += list + "\n";
+            }
+            description = tmp;
         }
         public void WriteXML()
         {

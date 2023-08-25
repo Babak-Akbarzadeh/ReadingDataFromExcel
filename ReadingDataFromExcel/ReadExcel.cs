@@ -156,6 +156,7 @@ namespace ReadingDataFromExcel
                     settings.lengthOfTimeSlot = lengthOfTimeslot;
                     settings.totalRegTimePerRoom = totalTimeslots;
                     settings.lengthOfBlock = lengthOfBlock;
+                    settings.totalExtraRoomAssignment = 3;
                     // create instances
                     if (settings.index_J == 0)
                     {
@@ -164,6 +165,7 @@ namespace ReadingDataFromExcel
                         continue;
                     }
                     string name = tmpDate.Year.ToString() + "-" + tmpDate.Month.ToString() + "-" + tmpDate.Day.ToString();
+                    name = (instances.Count + 1) + "";
                     Instance tmpInstance = new Instance(settings, "RealLife", tmpDate.Month.ToString(), name);
                     OptimalSolution tmpSolution = new OptimalSolution(tmpInstance);
 					tmpInstance.initialInputs(settings);
@@ -224,17 +226,17 @@ namespace ReadingDataFromExcel
 						if (theRsc1 >= 0)
 						{
                             tmpInstance.requiredResources_jr[theP][returnIndex(theRsc1, resources)] = true;
-                            tmpInstance.amountAvailable_r[returnIndex(theRsc1, resources)] = resourceAve[returnIndex(theRsc1, resources)];
+                            tmpInstance.amountAvailable_r[returnIndex(theRsc1, resources)] = resourceAve[theRsc1 - 1];
 						}
                         if (theRsc2 >= 0)
                         {
                             tmpInstance.requiredResources_jr[theP][returnIndex(theRsc2, resources)] = true;
-                            tmpInstance.amountAvailable_r[returnIndex(theRsc2, resources)] = resourceAve[returnIndex(theRsc2, resources)];
+                            tmpInstance.amountAvailable_r[returnIndex(theRsc2, resources)] = resourceAve[theRsc2 - 1];
                         }
                         if (theRsc3 >= 0)
                         {
                             tmpInstance.requiredResources_jr[theP][returnIndex(theRsc3, resources)] = true;
-                            tmpInstance.amountAvailable_r[returnIndex(theRsc3, resources)] = resourceAve[returnIndex(theRsc3, resources)];
+                            tmpInstance.amountAvailable_r[returnIndex(theRsc3, resources)] = resourceAve[theRsc3 - 1];
                         }
 
                         int priority = 0;

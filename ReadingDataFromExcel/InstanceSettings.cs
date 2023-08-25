@@ -41,7 +41,7 @@ namespace ReadingDataFromExcel
 
         public double ratioDurationToTotal;
 
-        public double TotalExtraRoomAssignment;
+        public double totalExtraRoomAssignment;
 
         public List<InstanceSettings> instancegroups;
         public InstanceSettings() { }
@@ -83,7 +83,7 @@ namespace ReadingDataFromExcel
             lb_ResourceSetupTime = 0;
             ub_ResourceSetupTime = 0;
             ratioDurationToTotal = ratioDurTotal;
-            TotalExtraRoomAssignment = 2;
+            totalExtraRoomAssignment = 2;
         }
 
         public void createGroups()

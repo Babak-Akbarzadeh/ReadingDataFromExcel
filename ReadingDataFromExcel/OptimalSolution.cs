@@ -206,7 +206,7 @@ namespace ReadingDataFromExcel
             description += "Total completion time: " + totalCompletionTime + "\n";
             for (int a = 0; a < instance.settings.index_A; a++)
             {
-                description += "   Surgeon deficiency: " + Math.Round(deficiency_a[a] * 100) + "%\n";
+                description += "   Surgeon deficiency[" + a.ToString("00") + "]: " + Math.Round(deficiency_a[a] * 100) + "%\n";
             }
             description += "================================================================\n";
             for (int k = 0; k < instance.settings.index_K; k++)
@@ -486,7 +486,7 @@ namespace ReadingDataFromExcel
         public void WriteXML()
         {
             calculateAllParameters();
-            string Path = instance.pathes.OutPutLocation + instance.name + "Solution.xml";
+            string Path = instance.pathes.OutPutGr + instance.name + "Solution.xml";
             System.Xml.Serialization.XmlSerializer writer =
                 new System.Xml.Serialization.XmlSerializer(typeof(OptimalSolution));
             System.IO.FileStream file = System.IO.File.Create(Path);
